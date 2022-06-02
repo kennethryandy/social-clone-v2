@@ -6,12 +6,14 @@ const morgan = require('morgan');
 const { notFound, errorHandler } = require('./middlewares/errorHandlers');
 // routes
 const post = require('./routes/post');
+const user = require('./routes/user');
 
 const app = express();
 app.use(morgan('common'));
 
 // Post routes
 app.use('/post', post);
+app.use('/user', user);
 
 // Not found route
 app.use(notFound);
