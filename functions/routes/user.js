@@ -1,23 +1,33 @@
 const { Router } = require('express');
-const { db, admin } = require('../firebase');
+const { db } = require('../firebase');
+const { validateLoginData, validateSignupData } = require('../utils/validators');
 const axios = require('axios');
 
 const router = Router();
 
 router.post('/signup', async (req, res, next) => {
-	// TODO: validate request
 	const newUser = {
 		email: req.body.email,
-		password: req.body.password
+		fullName: req.body.fullName,
+		createdAt: new Date().toISOString()
 	};
+	const { valid, errors } = validateSignupData({
+		...newUser,
+		password: req.body.password
+	});
+	if (!valid) {
+		return res.status(401).json(errors);
+	}
 	try {
 		const result = await axios.post(
 			`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${process.env.API_KEY}`,
-			{ ...newUser, returnSecureToken: true }
+			{
+				email: req.body.email,
+				password: req.body.password,
+				returnSecureToken: true
+			}
 		);
 		if (result.data) {
-			newUser.fullName = req.body.fullName;
-			newUser.createdAt = new Date().toISOString();
 			db.doc(`user/${result.data.localId}`).set(newUser);
 			return res.status(201).json({
 				message: "User created successfully",
@@ -37,7 +47,13 @@ router.post('/signup', async (req, res, next) => {
 });
 
 router.post('/login', async (req, res, next) => {
-	// TODO: validate request
+	const { valid, errors } = validateLoginData({
+		email: req.body.email,
+		password: req.body.password
+	});
+	if (!valid) {
+		return res.status(401).json(errors);
+	}
 	try {
 		const result = await axios.post(
 			`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.API_KEY}`,
