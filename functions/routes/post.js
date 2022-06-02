@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { db } = require('../firebase');
+const isAuth = require('../middlewares/authMiddleware');
 
 // setup router api/post
 const router = Router();
@@ -37,7 +38,7 @@ router.get('/:id', async (req, res, next) => {
 
 
 // Add a post
-router.post('/', async (req, res, next) => {
+router.post('/', isAuth, async (req, res, next) => {
 	const body = {
 		content: req.body.content,
 		type: req.body.type,
@@ -57,7 +58,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Delete a post
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', isAuth, async (req, res, next) => {
 	try {
 		const doc = db.doc(`post/${req.params.id}`);
 		if ((await doc.get()).exists) {
